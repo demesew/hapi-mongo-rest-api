@@ -1,12 +1,13 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+const Hapi = require('hapi');
+const config = require('../lib/config');
 const database = require('../lib/database');
-const Monster = require('../models/monster.model');
-const User = require('../models/user.model');
-const app = require('../app');
+const userModel = require('../models/user.model');
+const userRoutes = require('../routes/user.routes');
 
 const assert = chai.assert;
-const DB_URI = process.env.DB_URI || 'mongodb://localhost/godzilla';
+const server = new Hapi.Server();
 
 chai.use(chaiHttp);
 
@@ -15,206 +16,72 @@ describe('End to End Testing', () => {
   let request;
 
   before(done => {
-    request = chai.request(app);
-
-    database.connect(DB_URI);
-
-    done();
-  });
-
-  describe('Monster', () => {
-
-    before(done => {
-      // Wipes collection
-      Monster
-        .remove({})
-        .then(done());
+    server.connection({
+      host: config.host,
+      port: config.port
     });
 
-    it('Posts one item to db', done => {
-      let monster = 'Mothra';
-      request
-        .post('/monsters')
-        .set('content-type', 'application/json')
-        .send({name: monster, citiesRazed: 25})
-        .end((err, res) => {
-          let resObj = JSON.parse(res.text);
-          assert.equal(resObj.result.name, monster);
-          done();
-        });
-    });
+    server.route(userRoutes);
 
-    it('Posts another item and gets two items', done => {
-      let monster = 'Destroyah';
-      request
-        .post('/monsters')
-        .set('content-type', 'application/json')
-        .send({name: monster, citiesRazed: 50})
-        .then(() => {
-          request
-            .get('/monsters')
-            .set('content-type', 'application/json')
-            .end((err, res) => {
-              let parse = JSON.parse(res.text);
-              assert.equal(parse.result.length, 2);
-              done();
-            });
-        });
-    });
+    server.start(err => {
+      if (err) return console.error(err);
 
-    it('Returns sum of all citiesRazed', done => {
-      let expected = 75; // From the two posts above, we combine 25 and 50
-      request
-        .get('/monsters/totalDestruction')
-        .set('content-type', 'application/json')
-        .end((err, res) => {
-          let parse = JSON.parse(res.text);
-          let resTotal = parse.result.total_cities_razed;
-          assert.equal(resTotal, expected);
-          done();
-        });
-    });
+      console.log('Magic happens at', server.info.uri);
 
-    it('Throws specific validation error on name requirement', done => {
-      let expected = 'Path `name` is required.';
-      request
-        .post('/monsters')
-        .set('content-type', 'application/json')
-        .send({'citiesRazed': 300})
-        .end((err, res) => {
-          let parsed = JSON.parse(res.text);
-          assert.deepEqual(parsed.result, expected);
-          done();
-        });
-    });
+      database.connect(config.db_uri);
 
-    it('Throws specific validation error on negative number', done => {
-      let expected = 'citiesRazed cannot be a negative value';
-      request
-        .post('/monsters')
-        .set('content-type', 'application/json')
-        .send({'name': 'Zilla', 'citiesRazed': -1})
-        .end((err, res) => {
-          let parsed = JSON.parse(res.text);
-          assert.deepEqual(parsed.result, expected);
-          done();
-        });
-    });
+      request = chai.request(server.info.uri);
 
-    it('Gets one single item', done => {
-      request
-        .get('/monsters/Mothra')
-        .set('content-type', 'application/json')
-        .end((err, res) => {
-          let parsed = JSON.parse(res.text);
-          assert.equal(parsed.result[0].name, 'Mothra');
-          done();
-        });
+      done();
     });
-
-    it('Puts, doubles citiesRazed count from 50 to 100', done => {
-      request
-        .put('/monsters/Destroyah')
-        .set('content-type', 'application/json')
-        .send({citiesRazed: 100})
-        .then(() => {
-          request
-            .get('/monsters/Destroyah')
-            .set('content-type', 'application/json')
-            .end((err, res) => {
-              let parsed = JSON.parse(res.text);
-              assert.equal(parsed.result[0].citiesRazed, 100);
-              done();
-            });
-        });
-    });
-
-    it('Deletes one, then the other', done => {
-      let expected = 'There are no monsters yet. Post here to start adding some.';
-      request
-        .del('/monsters/Destroyah')
-        .set('content-type', 'application/json')
-        .then(() => {
-          request
-            .del('/monsters/Mothra')
-            .set('content-type', 'application/json')
-            .then(() => {
-              request
-                .get('/monsters')
-                .set('content-type', 'application/json')
-                .end((err, res) => {
-                  let parsed = JSON.parse(res.text);
-                  assert.equal(parsed.result, expected);
-                  done();
-                });
-            });
-        });
-    });
-
   });
 
   describe('User', () => {
 
+    let userId;
+
     before(done => {
-      // Wipes collection
-      User
+      userModel
         .remove({})
         .then(done());
     });
 
-    it('Posts one user to users collection', done => {
-      let userName = 'Johnny';
+    it('POSTs one user to users collection', done => {
+      let body = {
+        firstName: 'Johnny',
+        lastName: 'Luangphasy',
+        age: 26
+      };
 
       request
         .post('/users')
         .set('content-type', 'application/json')
-        .send({
-          name: userName
-        })
-        .end((err, res) => {
+        .send(body)
+        .then(res => {
           let resObj = JSON.parse(res.text);
 
           assert.equal(res.status, 200);
           assert.property(resObj, 'status');
-          assert.equal(resObj.status, 'posted');
-          assert.property(resObj, 'result');
-          assert.isObject(resObj.result);
-          assert.property(resObj.result, '_id');
-          assert.property(resObj.result, 'name');
-          assert.equal(resObj.result.name, userName);
-          assert.property(resObj.result, 'favoriteMonsters');
-          assert.isArray(resObj.result.favoriteMonsters);
-          assert.property(resObj.result, 'createdAt');
-          assert.property(resObj.result, 'updatedAt');
+          assert.equal(resObj.status, 'success');
+          assert.property(resObj, 'results');
+          assert.isObject(resObj.results);
+          assert.property(resObj.results, '_id');
+          assert.property(resObj.results, 'firstName');
+          assert.equal(resObj.results.firstName, body.firstName);
+          assert.property(resObj.results, 'lastName');
+          assert.equal(resObj.results.lastName, body.lastName);
+          assert.property(resObj.results, 'age');
+          assert.equal(resObj.results.age, body.age);
+          assert.property(resObj.results, 'createdAt');
+          assert.property(resObj.results, 'updatedAt');
+
+          userId = resObj.results._id;
 
           done();
         });
     });
 
-    it('Posts another user and gets two users', done => {
-      let userName = 'Don';
-
-      request
-        .post('/users')
-        .set('content-type', 'application/json')
-        .send({
-          name: userName
-        })
-        .then(() => {
-          request
-            .get('/users')
-            .set('content-type', 'application/json')
-            .end((err, res) => {
-              let resObj = JSON.parse(res.text);
-
-              assert.equal(resObj.result.length, 2);
-
-              done();
-            });
-        });
-    });
-
-    it('Gets all users', done => {
+    it('GETs all users', done => {
       request
         .get('/users')
         .set('content-type', 'application/json')
@@ -223,15 +90,15 @@ describe('End to End Testing', () => {
 
           assert.equal(res.status, 200);
           assert.property(resObj, 'status');
-          assert.property(resObj, 'result');
+          assert.property(resObj, 'results');
           assert.equal(resObj.status, 'success');
-          assert.isArray(resObj.result);
+          assert.isArray(resObj.results);
 
-          resObj.result.forEach(user => {
+          resObj.results.forEach(user => {
             assert.property(user, '_id');
-            assert.property(user, 'name');
-            assert.property(user, 'favoriteMonsters');
-            assert.isArray(user.favoriteMonsters);
+            assert.property(user, 'firstName');
+            assert.property(user, 'lastName');
+            assert.property(user, 'age');
             assert.property(user, 'createdAt');
             assert.property(user, 'updatedAt');
           });
@@ -240,75 +107,95 @@ describe('End to End Testing', () => {
         });
     });
 
-    it('Throws specific validation error on name requirement', done => {
-      let expected = 'Path `name` is required.';
-
+    it('GETs one user by ID', done => {
       request
-        .post('/users')
+        .get(`/users/${userId}`)
         .set('content-type', 'application/json')
-        .send({'favoriteMonsters': ['Mothra']})
-        .end((err, res) => {
+        .then(res => {
           let resObj = JSON.parse(res.text);
 
-          assert.deepEqual(resObj.result, expected);
+          assert.equal(res.status, 200);
+          assert.property(resObj, 'status');
+          assert.equal(resObj.status, 'success');
+          assert.property(resObj, 'results');
+          assert.property(resObj.results, 'firstName');
+          assert.equal(resObj.results.firstName, 'Johnny');
+          assert.property(resObj.results, 'lastName');
+          assert.equal(resObj.results.lastName, 'Luangphasy');
+          assert.property(resObj.results, 'age');
+          assert.equal(resObj.results.age, 26);
+          assert.property(resObj.results, 'createdAt');
+          assert.property(resObj.results, 'updatedAt');
 
           done();
         });
     });
 
-    it('Gets one user', done => {
+    it('PUTs new age by making request with ID', done => {
       request
-        .get('/users/johnny')
-        .set('content-type', 'application/json')
-        .end((err, res) => {
-          let resObj = JSON.parse(res.text);
-
-          assert.equal(resObj.result.name, 'Johnny');
-
-          done();
-        });
-    });
-
-    it('Puts "Destroyah" in favoriteMonsters array', done => {
-      request
-        .put('/users/Johnny')
+        .put(`/users/${userId}`)
         .set('content-type', 'application/json')
         .send({
-          favoriteMonsters: 'Destroyah'
+          age: 21
         })
-        .then(() => {
-          request
-            .get('/users/johnny')
-            .set('content-type', 'application/json')
-            .end((err, res) => {
-              let resObj = JSON.parse(res.text);
+        .then(res => {
+          let resObj = JSON.parse(res.text);
 
-              assert.deepEqual(resObj.result.favoriteMonsters, ['Destroyah']);
+          assert.equal(res.status, 200);
+          assert.property(resObj, 'status');
+          assert.equal(resObj.status, 'success');
+          assert.property(resObj, 'results');
+          assert.property(resObj.results, '_id');
+          assert.equal(resObj.results._id, userId);
+          assert.property(resObj.results, 'firstName');
+          assert.equal(resObj.results.firstName, 'Johnny');
+          assert.property(resObj.results, 'lastName');
+          assert.equal(resObj.results.lastName, 'Luangphasy');
+          assert.property(resObj.results, 'age');
+          assert.equal(resObj.results.age, 21);
+          assert.property(resObj.results, 'createdAt');
+          assert.property(resObj.results, 'updatedAt');
 
-              done();
-            });
+          done();
+
         });
     });
 
-    it('Deletes one user, then the other', done => {
+    it('DELETEs one user, then the other', done => {
       request
-        .del('/users/Johnny')
+        .del(`/users/${userId}`)
         .set('content-type', 'application/json')
-        .then(() => {
+        .then(res => {
+          let resObj = JSON.parse(res.text);
+
+          assert.equal(res.status, 200);
+          assert.property(resObj, 'status');
+          assert.equal(resObj.status, 'success');
+          assert.property(resObj, 'results');
+          assert.property(resObj.results, '_id');
+          assert.equal(resObj.results._id, userId);
+          assert.property(resObj.results, 'firstName');
+          assert.equal(resObj.results.firstName, 'Johnny');
+          assert.property(resObj.results, 'lastName');
+          assert.equal(resObj.results.lastName, 'Luangphasy');
+          assert.property(resObj.results, 'age');
+          assert.equal(resObj.results.age, 21);
+          assert.property(resObj.results, 'createdAt');
+          assert.property(resObj.results, 'updatedAt');
+
           request
-            .del('/users/Don')
+            .get('/users')
             .set('content-type', 'application/json')
-            .then(() => {
-              request
-                .get('/users')
-                .set('content-type', 'application/json')
-                .end((err, res) => {
-                  let resObj = JSON.parse(res.text);
+            .then(res => {
+              resObj = JSON.parse(res.text);
 
-                  assert.equal(resObj.result, 'There are no users yet. Post here to start adding some.');
+              assert.equal(res.status, 200);
+              assert.property(resObj, 'status');
+              assert.equal(resObj.status, 'success');
+              assert.property(resObj, 'results');
+              assert.equal(resObj.results, 'There are no users.');
 
-                  done();
-                });
+              done();
             });
         });
     });
