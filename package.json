@@ -2,9 +2,9 @@
   "name": "hapi-mongo-rest-api",
   "version": "1.0.0",
   "description": "One resource REST API backed with HapiJS and MongoDB (using Mongoose)",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node server.js",
     "test": "mocha",
     "dev": "mocha -w"
   },
@@ -19,7 +19,8 @@
   },
   "homepage": "https://github.com/jluangphasy/hapi-mongo-rest-api#readme",
   "dependencies": {
-    "hapi": "^13.4.1"
+    "hapi": "^13.4.1",
+    "mongoose": "^4.4.19"
   },
   "devDependencies": {
     "chai": "^3.5.0",
