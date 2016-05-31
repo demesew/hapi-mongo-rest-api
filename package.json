@@ -1,0 +1,29 @@
+{
+  "name": "hapi-mongo-rest-api",
+  "version": "1.0.0",
+  "description": "One resource REST API backed with HapiJS and MongoDB (using Mongoose)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "mocha",
+    "dev": "mocha -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jluangphasy/hapi-mongo-rest-api.git"
+  },
+  "author": "Johnny Luangphasy (https://github.com/jluangphasy)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jluangphasy/hapi-mongo-rest-api/issues"
+  },
+  "homepage": "https://github.com/jluangphasy/hapi-mongo-rest-api#readme",
+  "dependencies": {
+    "hapi": "^13.4.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-http": "^2.0.1",
+    "mocha": "^2.5.3"
+  }
+}
