@@ -1,5 +1,7 @@
 # Hapi Mongo Rest API
 
+[![Build Status](https://travis-ci.org/jluangphasy/hapi-mongo-rest-api.svg?branch=master)](https://travis-ci.org/jluangphasy/hapi-mongo-rest-api)
+
 One resource REST API backed with HapiJS and MongoDB (using Mongoose)
 
 ## Getting Started
@@ -7,15 +9,13 @@ One resource REST API backed with HapiJS and MongoDB (using Mongoose)
 1. Install [Node.js](https://nodejs.org/en/).
 2. Install [MongoDB](https://docs.mongodb.com/manual/installation/).
 3. Install [Postman](https://www.getpostman.com).
-4. Run `git clone https://github.com/DonChatelain/express-mongo-rest-api.git`.
-5. Run `cd express-mongo-rest-api`.
+4. Run `git clone https://github.com/jluangphasy/hapi-mongo-rest-api.git`.
+5. Run `cd hapi-mongo-rest-api`.
 6. Run `npm install`.
 7. Run `npm start`.
 8. Use Postman to make requests.
 
 ## API
-
-All requests must have `application/json` for `content-type` in the headers.
 
 ### Users
 
@@ -28,10 +28,13 @@ GET /users
 #### Get single user
 
 ```
-GET /users/:name
+GET /users/:id
 ```
 
 #### Create user
+
+Format: { firstName: *string*, lastName: *string*, age: *number* }  
+firstName and lastName is required and age must be a positive value.
 
 ```
 POST /users
@@ -39,15 +42,17 @@ POST /users
 
 #### Update user
 
+Format: { firstName: *string*, lastName: *string*, age: *number* }
+
 ```
-PUT /users/:name
-PATCH /users/:name
+PUT /users/:id
+PATCH /users/:id
 ```
 
 #### Remove user
 
 ```
-DELETE /users/:name
+DELETE /users/:id
 ```
 
 ## Tests
