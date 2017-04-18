@@ -1,15 +1,13 @@
 # Hapi Mongo Rest API
 
-[![Build Status](https://travis-ci.org/jluangphasy/hapi-mongo-rest-api.svg?branch=master)](https://travis-ci.org/jluangphasy/hapi-mongo-rest-api)
-
-One resource REST API backed with HapiJS and MongoDB (using Mongoose)
+One resource REST API backed with Hapi.js and MongoDB (using Mongoose).
 
 ## Getting Started
 
 1. Install [Node.js](https://nodejs.org/en/).
 2. Install [MongoDB](https://docs.mongodb.com/manual/installation/).
 3. Install [Postman](https://www.getpostman.com).
-4. Run `git clone https://github.com/jluangphasy/hapi-mongo-rest-api.git`.
+4. Run `git clone https://github.com/jluangphasy-archive/hapi-mongo-rest-api.git`.
 5. Run `cd hapi-mongo-rest-api`.
 6. Run `npm install`.
 7. Run `npm start`.

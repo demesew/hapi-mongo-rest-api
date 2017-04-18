@@ -1,7 +1,7 @@
 {
   "name": "hapi-mongo-rest-api",
   "version": "1.0.0",
-  "description": "One resource REST API backed with HapiJS and MongoDB (using Mongoose)",
+  "description": "One resource REST API backed with Hapi.js and MongoDB (using Mongoose).",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jluangphasy/hapi-mongo-rest-api.git"
+    "url": "git+https://github.com/jluangphasy-archive/hapi-mongo-rest-api.git"
   },
   "author": "Johnny Luangphasy (https://github.com/jluangphasy)",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jluangphasy/hapi-mongo-rest-api/issues"
+    "url": "https://github.com/jluangphasy-archive/hapi-mongo-rest-api/issues"
   },
-  "homepage": "https://github.com/jluangphasy/hapi-mongo-rest-api#readme",
+  "homepage": "https://github.com/jluangphasy-archive/hapi-mongo-rest-api#readme",
   "dependencies": {
     "hapi": "^13.4.1",
     "mongoose": "^4.4.19"
